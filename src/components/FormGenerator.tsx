@@ -67,7 +67,7 @@ const predefinedFields: PredefinedField[] = [
   {
     id: 'email',
     name: 'Email',
-    type: 'email',
+    type: 'text',
     defaultLabel: 'Email',
     defaultPlaceholder: 'Digite seu email',
     defaultIcon: 'mail',
@@ -152,9 +152,9 @@ export default function FormGenerator() {
   const [fields, setFields] = useState<FormField[]>([]);
   const [style, setStyle] = useState<FormStyle>(defaultStyle);
   const [formId, setFormId] = useState<string | null>(null); // Estado para armazenar o ID
-  const [submitButtonLabel, setSubmitButtonLabel] = useState<string>('Enviar');
-  const [submitButtonColor, setSubmitButtonColor] = useState<string>('green');
-  const [submitButtonFontSize, setSubmitButtonFontSize] = useState<number>(16);
+  const [submitButtonLabel, setSubmitButtonLabel] = useState('Enviar');
+  const [submitButtonColor, setSubmitButtonColor] = useState('green');
+  const [submitButtonFontSize, setSubmitButtonFontSize] = useState(16);
 
   useEffect(() => {
     // Obtém o ID da URL ao montar o componente
@@ -222,7 +222,7 @@ export default function FormGenerator() {
       }, submitButtonLabel)
     );
 
-    const form = React.createElement('form', {}, formElements);
+    const form = React.createElement('form', { style: { maxWidth: '550px', backgroundColor: style.formBackground } }, formElements);
     return ReactDOMServer.renderToString(form);
   };
 
