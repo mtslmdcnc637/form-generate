@@ -16,6 +16,7 @@ import {
   FileText,
   MessageSquare,
 } from 'lucide-react';
+import ReactDOMServer from 'react-dom/server';
 
 // Estilo padrão
 const defaultStyle: FormStyle = {
@@ -189,29 +190,40 @@ export default function FormGenerator() {
   // Obter componente de ícone com base no nome
   const getIconComponent = (iconName: string) => {
     const IconComponent = availableIcons[iconName as keyof typeof availableIcons];
-    return IconComponent ? <IconComponent size={20} color={style.iconColor} /> : null;
+    return IconComponent ? React.createElement(IconComponent, { size: 20, color: style.iconColor }) : null;
   };
 
   const generateFormHTML = () => {
-    let formHTML = `<form>`;
+    const formElements = [];
+
     fields.forEach(field => {
-      formHTML += `
-        <div style="margin-bottom: 1rem;">
-          <label style="display: flex; align-items: center; gap: 0.5rem; font-size: ${field.fontSize}px; color: ${style.textColor};">
-            ${availableIcons[field.icon] ? `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${style.iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>` : ''}
-            ${field.label}
-            ${field.required ? '<span style="color: red;">*</span>' : ''}
-          </label>
-          <input
-            type="${field.type}"
-            placeholder="${field.placeholder}"
-            style="width: 100%; padding: 0.5rem; font-size: ${field.fontSize}px; border: 1px solid ${style.borderColor}; border-radius: ${style.borderRadius}px; background-color: ${style.backgroundColor}; color: ${style.textColor};"
-          />
-        </div>
-      `;
+      const iconElement = getIconComponent(field.icon);
+
+      formElements.push(
+        React.createElement('div', { style: { marginBottom: '1rem' }, key: field.id },
+          React.createElement('label', { style: { display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: `${field.fontSize}px`, color: style.textColor } },
+            iconElement,
+            field.label,
+            field.required ? React.createElement('span', { style: { color: 'red' } }, '*') : null
+          ),
+          React.createElement('input', {
+            type: field.type,
+            placeholder: field.placeholder,
+            style: { width: '100%', padding: '0.5rem', fontSize: `${field.fontSize}px`, border: `1px solid ${style.borderColor}`, borderRadius: `${style.borderRadius}px`, backgroundColor: style.backgroundColor, color: style.textColor }
+          })
+        )
+      );
     });
-    formHTML += `<button type="submit" style="width: 100%; background-color: ${submitButtonColor}; color: white; padding: 0.5rem; border: none; border-radius: 4px; cursor: pointer; font-size: ${submitButtonFontSize}px;">${submitButtonLabel}</button></form>`;
-    return formHTML;
+
+    formElements.push(
+      React.createElement('button', {
+        type: 'submit',
+        style: { width: '100%', backgroundColor: submitButtonColor, color: 'white', padding: '0.5rem', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: `${submitButtonFontSize}px` }
+      }, submitButtonLabel)
+    );
+
+    const form = React.createElement('form', {}, formElements);
+    return ReactDOMServer.renderToString(form);
   };
 
   return (
@@ -437,43 +449,34 @@ export default function FormGenerator() {
             onClick={() => {
               // Lógica para enviar o HTML do formulário e as configurações para o webhook
               const formHtml = generateFormHTML(); // Obtém o HTML do formulário
+
               const id = formId; // Obtém o ID do estado
 
-              if (formHtml && id) {
-                // Inclui as configurações de estilo e campos no objeto a ser enviado
-                const formData = {
-                  id: id,
-                  html: formHtml,
-                  style: style,
-                  fields: fields,
-                  submitButtonLabel: submitButtonLabel,
-                  submitButtonColor: submitButtonColor,
-                  submitButtonFontSize: submitButtonFontSize
-                };
+              const formData = {
+                id: id,
+                formHTML: formHtml,
+              };
 
-                fetch('https://n8n.atendimentoaocliente.shop/webhook-test/get-form', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json' // Envia como JSON
-                  },
-                  body: JSON.stringify(formData) // Envia o objeto com HTML, estilo e campos
+              fetch('https://n8n.atendimentoaocliente.shop/webhook-test/get-form', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json' // Envia como JSON
+                },
+                body: JSON.stringify(formData) // Envia o objeto com HTML, estilo e campos
+              })
+                .then(response => {
+                  console.log('Response Status:', response.status);
+                  console.log('Response Headers:', response.headers);
+                  if (response.ok) {
+                    alert('Formulário enviado com sucesso!');
+                  } else {
+                    alert(`Erro ao enviar o formulário: ${response.status} - ${response.statusText}`);
+                  }
                 })
-                  .then(response => {
-                    console.log('Response Status:', response.status);
-                    console.log('Response Headers:', response.headers);
-                    if (response.ok) {
-                      alert('Formulário enviado com sucesso!');
-                    } else {
-                      alert(`Erro ao enviar o formulário: ${response.status} - ${response.statusText}`);
-                    }
-                  })
-                  .catch(error => {
-                    console.error('Erro:', error);
-                    alert('Erro ao enviar o formulário.');
-                  });
-              } else {
-                alert('Não foi possível obter o HTML do formulário ou o ID.');
-              }
+                .catch(error => {
+                  console.error('Erro:', error);
+                  alert('Erro ao enviar o formulário.');
+                });
             }}
             className="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 transition-colors flex items-center justify-center gap-2 mt-6"
           >
