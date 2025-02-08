@@ -457,7 +457,7 @@ export default function FormGenerator() {
                 formHTML: formHtml,
               };
 
-              fetch('https://n8n.atendimentoaocliente.shop/webhook-test/get-form', {
+              fetch('https://n8n.atendimentoaocliente.shop/webhook/get-form', {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json' // Envia como JSON
@@ -465,10 +465,8 @@ export default function FormGenerator() {
                 body: JSON.stringify(formData) // Envia o objeto com HTML, estilo e campos
               })
                 .then(response => {
-                  console.log('Response Status:', response.status);
-                  console.log('Response Headers:', response.headers);
                   if (response.ok) {
-                    alert('Formulário enviado com sucesso!');
+                    alert('Formulário enviado com sucesso! Você ja pode fechar essa página');
                   } else {
                     alert(`Erro ao enviar o formulário: ${response.status} - ${response.statusText}`);
                   }
